@@ -1,0 +1,234 @@
+// Laxy Fashions — Prisma Schema
+// PostgreSQL + Prisma ORM
+// See README.md for migration and seeding instructions.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum AdminRole {
+  OWNER
+  STAFF
+}
+
+enum AdminStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InventoryMovementType {
+  SALE_CONFIRMATION
+  CANCELLATION_RELEASE
+  MANUAL_ADJUSTMENT
+  RESTOCK
+}
+
+// ─────────────────────────────────────────────
+// CATEGORY
+// ─────────────────────────────────────────────
+
+model Category {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  description String?
+  status      CategoryStatus @default(ACTIVE)
+  sortOrder   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  products    Product[]
+
+  @@index([status])
+  @@index([sortOrder])
+}
+
+// ─────────────────────────────────────────────
+// PRODUCT
+// ─────────────────────────────────────────────
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  description String?
+  categoryId  String?
+  fabric      String?
+  occasion    String[]      // e.g. ["Festive", "Wedding"]
+  basePrice   Decimal       @db.Decimal(10, 2)
+  salePrice   Decimal?      @db.Decimal(10, 2)
+  sku         String        @unique
+  status      ProductStatus @default(ACTIVE)
+  stock       Int           @default(0)
+  images      String[]      // ordered URLs; first = cover
+  featured    Boolean       @default(false)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category            Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems          OrderItem[]
+  inventoryMovements  InventoryMovement[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([featured])
+  @@index([slug])
+}
+
+// ─────────────────────────────────────────────
+// ORDER
+// ─────────────────────────────────────────────
+
+model Order {
+  id                  String      @id @default(cuid())
+  orderNumber         String      @unique  // e.g. LF-1001
+  customerName        String
+  phone               String               // stored as +91XXXXXXXXXX
+  addressLine         String
+  area                String
+  landmark            String?
+  city                String
+  state               String
+  pincode             String
+  note                String?
+  status              OrderStatus @default(PENDING)
+  subtotal            Decimal     @db.Decimal(10, 2)
+  total               Decimal     @db.Decimal(10, 2)
+  inventoryCommitted  Boolean     @default(false)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+
+  @@index([status])
+  @@index([phone])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// ORDER ITEM — historical snapshot
+// ─────────────────────────────────────────────
+
+model OrderItem {
+  id                   String   @id @default(cuid())
+  orderId              String
+  productId            String?  // nullable — product may be archived later
+  productNameSnapshot  String
+  skuSnapshot          String?
+  quantity             Int
+  unitPriceSnapshot    Decimal  @db.Decimal(10, 2)
+  lineTotalSnapshot    Decimal  @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ─────────────────────────────────────────────
+// ORDER STATUS HISTORY
+// ─────────────────────────────────────────────
+
+model OrderStatusHistory {
+  id             String      @id @default(cuid())
+  orderId        String
+  fromStatus     OrderStatus?
+  toStatus       OrderStatus
+  changedByAdminId String?
+  note           String?
+  createdAt      DateTime    @default(now())
+
+  order          Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedByAdmin AdminUser?  @relation(fields: [changedByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────
+// ADMIN USER
+// ─────────────────────────────────────────────
+
+model AdminUser {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         AdminRole   @default(STAFF)
+  status       AdminStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  orderStatusHistory OrderStatusHistory[]
+  inventoryMovements InventoryMovement[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// ─────────────────────────────────────────────
+// INVENTORY MOVEMENT — audit trail
+// ─────────────────────────────────────────────
+
+model InventoryMovement {
+  id               String                @id @default(cuid())
+  productId        String
+  type             InventoryMovementType
+  quantity         Int                   // positive = added, negative = removed
+  referenceType    String                // "ORDER", "MANUAL"
+  referenceId      String                // orderId or admin action ID
+  createdByAdminId String?
+  note             String?
+  createdAt        DateTime              @default(now())
+
+  product        Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdByAdmin AdminUser? @relation(fields: [createdByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// ORDER COUNTER — concurrency-safe sequence
+// Single row; incremented inside a transaction.
+// ─────────────────────────────────────────────
+
+model OrderCounter {
+  id        Int @id @default(1)
+  nextValue Int @default(1001)
+}
