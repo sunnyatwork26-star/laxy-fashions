@@ -1,26 +1,179 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ════════════════════════════════════════════════════════════════════════════
+   LAXY FASHIONS — Modern Pale Silk Design System
+   Sleek, modern, low eye-strain pale silk & alabaster theme.
+   Soft Alabaster (#F8F5EF), Deep Rosewood Maroon (#7A1E1E), Honey Gold (#C5912E),
+   Rich Espresso Charcoal (#1C1714).
+   ════════════════════════════════════════════════════════════════════════════ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background:         #F8F5EF;   /* Pale Silk Alabaster — low eye strain */
+    --foreground:         #1C1714;   /* Deep Espresso Charcoal */
+    --card:               #FFFFFF;   /* Pure White Surfaces */
+    --card-foreground:    #1C1714;
+    --popover:            #FFFFFF;
+    --popover-foreground: #1C1714;
+    
+    --primary:            #7A1E1E;   /* Deep Rosewood Maroon */
+    --primary-foreground: #FFFFFF;
+    
+    --secondary:          #F0EBE1;   /* Soft Pale Linen */
+    --secondary-foreground: #1C1714;
+    
+    --muted:              #E8E1D5;
+    --muted-foreground:   #6E6359;   /* Muted Warm Taupe */
+    
+    --accent:             #C5912E;   /* Honey Gold */
+    --accent-foreground:  #FFFFFF;
+    
+    --destructive:        #B93829;
+    --destructive-foreground: #FFFFFF;
+    
+    --border:             #E6DFD3;   /* Soft Border */
+    --input:              #F0EBE1;
+    --ring:               #7A1E1E;
+
+    --radius:             1rem;
+    --nav-h:              78px;
+    --pad:                clamp(20px, 4vw, 56px);
+  }
+
+  [data-theme="dark"] {
+    --background:         #161210;
+    --foreground:         #F5F0E8;
+    --card:               #201B18;
+    --card-foreground:    #F5F0E8;
+    --primary:            #9B2828;
+    --primary-foreground: #FFFFFF;
+    --secondary:          #2B2420;
+    --secondary-foreground: #F5F0E8;
+    --muted:              #2B2420;
+    --muted-foreground:   #A89B8C;
+    --accent:             #E5AC3A;
+    --accent-foreground:  #161210;
+    --border:             #332B26;
+    --input:              #2B2420;
+    --ring:               #E5AC3A;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  ::selection {
+    background: #7A1E1E;
+    color: #FFFFFF;
+  }
+}
+
+@layer components {
+  .container-laxy {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 1240px;
+    padding-left: var(--pad);
+    padding-right: var(--pad);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #7A1E1E;
+    font-family: var(--font-sans), sans-serif;
+  }
+
+  .btn-press {
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease, background-color 200ms ease, box-shadow 200ms ease;
+  }
+  .btn-press:active {
+    transform: scale(0.97);
+  }
+
+  .btn-maroon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9999px;
+    background: #7A1E1E;
+    color: #FFFFFF;
+    padding: 13px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 16px rgba(122, 30, 30, 0.18);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-maroon:hover {
+    background: #651717;
+    box-shadow: 0 8px 24px rgba(122, 30, 30, 0.28);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-maroon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9999px;
+    border: 1.5px solid #7A1E1E;
+    color: #7A1E1E;
+    padding: 13px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+  }
+  .btn-outline-maroon:hover {
+    background: #7A1E1E;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(230, 223, 211, 0.8);
+    box-shadow: 0 10px 30px rgba(28, 23, 20, 0.03);
+  }
+
+  .font-heading {
+    font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+  }
 }
