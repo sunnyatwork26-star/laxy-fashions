@@ -26,8 +26,12 @@ export const metadata: Metadata = {
     "Laxy Fashions — Handpicked Indian sarees. Festive, wedding, and everyday sarees. Order online and confirm directly on WhatsApp.",
   keywords: ["sarees", "Indian sarees", "festive sarees", "wedding sarees", "Laxy Fashions", "Banarasi silk", "Kanjivaram"],
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.png", type: "image/png" },
+    ],
     apple: "/logo.png",
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     type: "website",
