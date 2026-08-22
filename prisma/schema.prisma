@@ -3,7 +3,8 @@
 // See README.md for migration and seeding instructions.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
