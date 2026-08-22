@@ -206,7 +206,7 @@ export default function AdminOrderDetailClient({ order: initialOrder }: { order:
             further actions.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {next.map((s) => (
               <button
                 key={s}
@@ -215,16 +215,16 @@ export default function AdminOrderDetailClient({ order: initialOrder }: { order:
                   if (s === "CONFIRMED" || s === "CANCELLED") setConfirmTo(s);
                   else runTransition(s);
                 }}
-                className={`rounded-full px-5 py-2.5 text-sm font-medium btn-press disabled:opacity-60 ${
+                className={`rounded-full px-6 py-2.5 text-sm font-semibold shadow-sm transition-all hover:shadow-md disabled:opacity-60 ${
                   s === "CANCELLED"
-                    ? "border border-destructive text-destructive hover:bg-destructive hover:text-white"
-                    : "bg-primary text-primary-foreground"
+                    ? "border-2 border-red-400 text-red-700 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600"
+                    : "bg-primary text-white hover:opacity-90"
                 }`}
               >
                 {s === "CONFIRMED"
-                  ? "Confirm order"
+                  ? "✓ Confirm order"
                   : s === "CANCELLED"
-                  ? "Cancel order"
+                  ? "✗ Cancel order"
                   : `Mark as ${STATUS_LABELS[s]}`}
               </button>
             ))}
@@ -252,23 +252,23 @@ export default function AdminOrderDetailClient({ order: initialOrder }: { order:
                 ? "Stock reserved for this order will be returned to inventory."
                 : "No inventory was committed, so nothing will be restocked."}
             </p>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-4 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmTo(null)}
                 disabled={busy}
-                className="rounded-full border border-border px-4 py-2 text-sm"
+                className="rounded-full border-2 border-gray-300 bg-white text-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-100 hover:border-gray-400 transition-colors disabled:opacity-50"
               >
-                Cancel
+                Go back
               </button>
               <button
                 onClick={() => runTransition(confirmTo)}
                 disabled={busy}
-                className={`rounded-full px-5 py-2 text-sm font-medium text-white inline-flex items-center gap-2 ${
-                  confirmTo === "CANCELLED" ? "bg-destructive" : "bg-primary"
+                className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white inline-flex items-center gap-2 shadow-md transition-all hover:shadow-lg disabled:opacity-50 ${
+                  confirmTo === "CANCELLED" ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
                 }`}
               >
                 {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                {confirmTo === "CONFIRMED" ? "Confirm order" : "Yes, cancel"}
+                {confirmTo === "CONFIRMED" ? "✓ Confirm order" : "✗ Yes, cancel"}
               </button>
             </div>
           </div>
