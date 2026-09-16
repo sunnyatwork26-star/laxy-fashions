@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://laxyfashions.com";
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://laxy-fashions.vercel.app";
 
   const products = await prisma.product.findMany({
     where: { status: "ACTIVE" },
@@ -16,10 +16,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  const infoPages = ["shipping", "returns", "privacy", "terms", "contact"];
+
   return [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/shop`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
-    { url: `${baseUrl}/cart`, changeFrequency: "never" as const, priority: 0.2 },
     ...productUrls,
+    ...infoPages.map((page) => ({
+      url: `${baseUrl}/${page}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.3,
+    })),
   ];
 }

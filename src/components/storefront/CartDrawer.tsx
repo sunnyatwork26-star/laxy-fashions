@@ -49,7 +49,7 @@ export default function CartDrawer() {
                   Your bag is empty
                 </h3>
                 <p className="text-xs text-muted-foreground max-w-xs">
-                  Looks like you haven't added any sarees to your shopping bag yet.
+                  Looks like you haven&apos;t added any sarees to your shopping bag yet.
                 </p>
                 <button
                   onClick={() => setDrawerOpen(false)}

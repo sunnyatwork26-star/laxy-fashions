@@ -10,7 +10,6 @@ import {
   LogOut,
   Store,
   Boxes,
-  ChevronRight,
 } from "lucide-react";
 
 const NAV = [

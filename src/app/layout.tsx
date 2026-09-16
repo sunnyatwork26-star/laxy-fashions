@@ -18,6 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "https://laxy-fashions.vercel.app"),
   title: {
     default: "Laxy Fashions — Handpicked Sarees",
     template: "%s | Laxy Fashions",

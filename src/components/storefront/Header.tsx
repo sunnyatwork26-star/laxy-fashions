@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ShoppingBag, MessageCircle, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
@@ -18,20 +18,25 @@ const NAV_LINKS = [
 export default function Header() {
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mountedRef = useRef(false);
   const { items, setDrawerOpen } = useCart();
   const pathname = usePathname();
+  const prevPathRef = useRef(pathname);
 
   useEffect(() => {
-    setMounted(true);
+    mountedRef.current = true;
     const onScroll = () => setStuck(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => setMenuOpen(false), [pathname]);
+  // Close mobile menu on navigation
+  if (prevPathRef.current !== pathname) {
+    prevPathRef.current = pathname;
+    if (menuOpen) setMenuOpen(false);
+  }
 
-  const totalItems = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+  const totalItems = mountedRef.current ? items.reduce((sum, item) => sum + item.quantity, 0) : 0;
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
 
   return (

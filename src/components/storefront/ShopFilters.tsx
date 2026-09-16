@@ -33,7 +33,7 @@ export default function ShopFilters({ mobile = false }: { mobile?: boolean }) {
 
   const hasFilters = currentOccasion || currentFabric || currentInStock;
 
-  const FilterContent = () => (
+  const filterContent = (
     <div className="space-y-6">
       {/* Sort */}
       <div>
@@ -123,7 +123,7 @@ export default function ShopFilters({ mobile = false }: { mobile?: boolean }) {
     </div>
   );
 
-  if (!mobile) return <FilterContent />;
+  if (!mobile) return filterContent;
 
   return (
     <div className="lg:hidden mb-5">
@@ -132,7 +132,7 @@ export default function ShopFilters({ mobile = false }: { mobile?: boolean }) {
         className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary transition-colors"
       >
         <SlidersHorizontal className="h-4 w-4" />
-        Filter & sort
+        Filter &amp; sort
         {hasFilters && (
           <span className="h-2 w-2 rounded-full bg-primary" />
         )}
@@ -151,10 +151,11 @@ export default function ShopFilters({ mobile = false }: { mobile?: boolean }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <FilterContent />
+            {filterContent}
           </div>
         </div>
       )}
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, ArrowRight } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { formatINR } from "@/lib/orderLogic";
 import { useCart } from "@/context/CartContext";
 
@@ -64,7 +64,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
           {onSale && (
             <span className="bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
-              Sale
+              {Math.round(((basePriceNum - price) / basePriceNum) * 100)}% Off
             </span>
           )}
           {product.fabric && (

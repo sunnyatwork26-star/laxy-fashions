@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle, Phone, MapPin, ShieldCheck, Heart } from "lucide-react";
+import { MessageCircle, ShieldCheck, Heart } from "lucide-react";
 
 export default function Footer() {
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";

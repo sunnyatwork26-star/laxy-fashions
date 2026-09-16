@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://laxyfashions.com";
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://laxy-fashions.vercel.app";
   return {
     rules: [
       {
