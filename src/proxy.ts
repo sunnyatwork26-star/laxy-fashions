@@ -11,7 +11,15 @@ export async function proxy(req: NextRequest) {
   const isAuthApi = pathname.startsWith("/api/auth");
 
   if (isAdminRoute && !isLoginPage && !isAuthApi) {
-    const token = await getToken({ req });
+    const secret =
+      process.env.AUTH_SECRET ||
+      process.env.NEXTAUTH_SECRET ||
+      "dev-secret-change-in-production-32chars-ok";
+
+    const token = await getToken({
+      req,
+      secret,
+    });
 
     if (!token) {
       const loginUrl = new URL("/admin/login", req.url);

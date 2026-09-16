@@ -21,15 +21,20 @@ function LoginForm() {
     setLoading(true);
     try {
       const res = await signIn("credentials", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         redirect: false,
       });
+
       if (res?.error) {
-        setError("Invalid email or password.");
+        setError(
+          res.error === "CredentialsSignin"
+            ? "Invalid email or password."
+            : "Login failed. Please verify credentials or try again later."
+        );
       } else {
-        router.push(callbackUrl);
-        router.refresh();
+        // Direct window navigation ensures session cookies are applied immediately
+        window.location.href = callbackUrl;
       }
     } catch {
       setError("Something went wrong. Please try again.");
