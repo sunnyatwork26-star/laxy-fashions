@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, resetRateLimit } from "@/lib/rateLimit";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -19,16 +20,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.name = user.name;
-        token.email = user.email;
+        token.role = user.role;
+        token.name = user.name ?? "";
+        token.email = user.email ?? "";
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id as string;
-        (session.user as any).role = token.role;
+        session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     },
@@ -46,6 +47,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
 
+        // Rate limit: 5 attempts per 15 minutes per email
+        const limit = checkRateLimit(`login:${email.toLowerCase()}`);
+        if (!limit.allowed) {
+          throw new Error(
+            `Too many login attempts. Try again in ${limit.resetInSeconds} seconds.`
+          );
+        }
+
         const admin = await prisma.adminUser.findUnique({
           where: { email: email.toLowerCase() },
         });
@@ -54,6 +63,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const valid = await bcrypt.compare(password, admin.passwordHash);
         if (!valid) return null;
+
+        // Success — reset rate limit counter
+        resetRateLimit(`login:${email.toLowerCase()}`);
 
         // Update last login
         await prisma.adminUser.update({

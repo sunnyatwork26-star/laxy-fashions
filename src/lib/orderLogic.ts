@@ -122,20 +122,29 @@ export function slugify(text: string): string {
     .replace(/-+/g, "-");
 }
 
+/** Shape of fields that serializeProduct needs to convert. */
+interface SerializableProduct {
+  basePrice?: unknown;
+  salePrice?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  [key: string]: unknown;
+}
+
 /**
  * Convert Prisma Decimal objects in product records to plain numbers for Next.js Client Component props.
  */
-export function serializeProduct<T extends Record<string, any>>(p: T): T {
+export function serializeProduct<T extends SerializableProduct>(p: T): T {
   if (!p) return p;
   return {
     ...p,
     basePrice: p.basePrice ? Number(p.basePrice) : 0,
     salePrice: p.salePrice ? Number(p.salePrice) : null,
-    createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
-    updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : undefined,
+    createdAt: p.createdAt ? new Date(p.createdAt as string).toISOString() : undefined,
+    updatedAt: p.updatedAt ? new Date(p.updatedAt as string).toISOString() : undefined,
   };
 }
 
-export function serializeProducts<T extends Record<string, any>>(list: T[]): T[] {
+export function serializeProducts<T extends SerializableProduct>(list: T[]): T[] {
   return list.map(serializeProduct);
 }

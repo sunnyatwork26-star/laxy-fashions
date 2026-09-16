@@ -1,0 +1,11 @@
+# CodeRabbit / code-review-graph ignore patterns
+# Exclude heavy directories that cause graph build timeouts
+
+node_modules/
+.next/
+.git/
+dist/
+coverage/
+test/
+prisma/migrations/
+public/

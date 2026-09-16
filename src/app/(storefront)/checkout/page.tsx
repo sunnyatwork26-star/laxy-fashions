@@ -89,8 +89,8 @@ export default function CheckoutPage() {
       clearCart();
       toast.success("Order submitted successfully!");
       router.push(`/order/${res.orderId}`);
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
       toast.error("Checkout failed.");
       setLoading(false);
     }

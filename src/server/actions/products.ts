@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/orderLogic";
+import type { ProductStatus } from "@prisma/client";
 import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 
@@ -28,7 +29,7 @@ export async function getProducts(filters?: {
   return prisma.product.findMany({
     where: {
       status: filters?.status
-        ? (filters.status as any)
+        ? (filters.status as ProductStatus)
         : { not: "ARCHIVED" },
       categoryId: filters?.categoryId || undefined,
       OR: filters?.q
@@ -79,7 +80,7 @@ export async function createProduct(rawInput: unknown) {
       basePrice: data.basePrice,
       salePrice: data.salePrice ?? null,
       sku: data.sku,
-      status: data.status as any,
+      status: data.status as ProductStatus,
       stock: data.stock,
       images: data.images ?? [],
       featured: data.featured,
@@ -126,7 +127,7 @@ export async function updateProduct(id: string, rawInput: unknown) {
       basePrice: data.basePrice,
       salePrice: admin.role === "OWNER" ? (data.salePrice ?? null) : undefined,
       sku: data.sku,
-      status: data.status as any,
+      status: data.status as ProductStatus,
       stock: data.stock,
       images: data.images ?? [],
       featured: data.featured,

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/validations";
 import { canTransition } from "@/lib/orderLogic";
 import { auth } from "@/lib/auth";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, OrderStatus } from "@prisma/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // createOrder  — public, no auth required. All pricing is server-side.
@@ -193,15 +193,15 @@ export async function transitionOrder(
       }
 
       // Other transitions
-      await tx.order.update({ where: { id: orderId }, data: { status: toStatus as any } });
+      await tx.order.update({ where: { id: orderId }, data: { status: toStatus as OrderStatus } });
       await tx.orderStatusHistory.create({
-        data: { orderId, fromStatus: order.status, toStatus: toStatus as any, changedByAdminId: adminId, note: note ?? toStatus },
+        data: { orderId, fromStatus: order.status, toStatus: toStatus as OrderStatus, changedByAdminId: adminId, note: note ?? toStatus },
       });
       return toStatus;
     });
 
     return { ok: true, status };
-  } catch (e: any) {
-    return { ok: false, error: e.message ?? "Transition failed." };
+  } catch (e: unknown) {
+    return { ok: false, error: e instanceof Error ? e.message : "Transition failed." };
   }
 }
