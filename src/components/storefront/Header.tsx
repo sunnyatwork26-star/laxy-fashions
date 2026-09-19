@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { ShoppingBag, MessageCircle, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
 
 const NAV_LINKS = [
   { href: "/shop", label: "All Sarees" },
@@ -20,6 +21,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const mountedRef = useRef(false);
   const { items, setDrawerOpen } = useCart();
+  const { settings, getWhatsAppUrl } = useStoreSettings();
   const pathname = usePathname();
   const prevPathRef = useRef(pathname);
 
@@ -37,7 +39,7 @@ export default function Header() {
   }
 
   const totalItems = mountedRef.current ? items.reduce((sum, item) => sum + item.quantity, 0) : 0;
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
+  const waUrl = getWhatsAppUrl(`Hello ${settings.storeName}! I have an inquiry about your sarees.`);
 
   return (
     <header
@@ -88,9 +90,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {/* WhatsApp Direct Link */}
           <a
-            href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
-              "Hello Laxy Fashions! I have an inquiry about your sarees."
-            )}`}
+            href={waUrl}
             target="_blank"
             rel="noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-3.5 py-1.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 shadow-sm"
@@ -140,9 +140,7 @@ export default function Header() {
             ))}
             <div className="pt-2">
               <a
-                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
-                  "Hello Laxy Fashions! I have an inquiry about your sarees."
-                )}`}
+                href={waUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 py-2.5 rounded-full"

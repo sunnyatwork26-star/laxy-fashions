@@ -59,7 +59,8 @@ export default function AdminOrderDetailClient({ order: initialOrder }: { order:
       customerName: order.customerName,
       items: order.items,
       total: order.total,
-    })
+    }),
+    order.phone
   );
   const isCancelled = order.status === "CANCELLED";
   const currentFlowIdx = ORDER_FLOW.indexOf(order.status);

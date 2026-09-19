@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, MessageCircle, ShoppingBag } from "lucide-react";
 import { formatINR, buildWhatsAppMessage, whatsappUrl } from "@/lib/orderLogic";
+import { getPublicStoreSettings } from "@/server/actions/settings";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -17,10 +18,13 @@ interface Props {
 export default async function OrderConfirmationPage({ params }: Props) {
   const { id } = await params;
 
-  const order = await prisma.order.findUnique({
-    where: { id },
-    include: { items: true },
-  });
+  const [order, settings] = await Promise.all([
+    prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    }),
+    getPublicStoreSettings(),
+  ]);
 
   if (!order) notFound();
 
@@ -34,7 +38,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
     })),
     total: Number(order.total),
   });
-  const waLink = whatsappUrl(waMessage);
+  const waLink = whatsappUrl(waMessage, settings.whatsappNumber);
 
   return (
     <div className="container-laxy py-12 max-w-2xl">

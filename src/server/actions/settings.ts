@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sanitizePhone } from "@/lib/orderLogic";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -23,8 +24,8 @@ const storeSettingsSchema = z.object({
   storeName: z.string().min(2).max(100),
   storeTagline: z.string().max(200).optional().default(""),
   supportEmail: z.string().email(),
-  supportPhone: z.string().min(10).max(15),
-  whatsappNumber: z.string().min(10).max(15),
+  supportPhone: z.string().transform((v) => sanitizePhone(v) || v).pipe(z.string().min(10).max(15)),
+  whatsappNumber: z.string().transform((v) => sanitizePhone(v) || v).pipe(z.string().min(10).max(15)),
   announcementText: z.string().max(300).optional().default(""),
   announcementEnabled: z.boolean().default(true),
   freeShippingThreshold: z.number().min(0).default(0),
@@ -143,7 +144,12 @@ export async function updateStoreSettings(rawInput: unknown) {
   });
 
   revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
+  revalidatePath("/(storefront)", "layout");
   revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
 
   return {
     ok: true,

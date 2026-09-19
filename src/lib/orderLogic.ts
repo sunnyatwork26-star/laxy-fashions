@@ -102,12 +102,31 @@ export function buildWhatsAppMessage(params: {
 }
 
 /**
- * Build a wa.me URL with a pre-filled message.
- * Phone number comes from NEXT_PUBLIC_WHATSAPP_NUMBER env var.
+ * Clean and format a phone number to standard international digits without symbols.
  */
-export function whatsappUrl(message: string): string {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+export function sanitizePhone(phone?: string | null): string {
+  if (!phone) return "";
+  let cleaned = String(phone).replace(/[^0-9]/g, "");
+  // If starts with 0 and is 11 digits (e.g. 09876543210), trim leading 0 and prepend 91 if 10 digits
+  if (cleaned.startsWith("0") && cleaned.length === 11) {
+    cleaned = cleaned.slice(1);
+  }
+  if (cleaned.length === 10) {
+    return `91${cleaned}`;
+  }
+  return cleaned;
+}
+
+/**
+ * Build a wa.me URL with a pre-filled message.
+ * Accepts an optional dynamic phone number (falls back to NEXT_PUBLIC_WHATSAPP_NUMBER or default).
+ */
+export function whatsappUrl(message: string, phone?: string | null): string {
+  const targetPhone =
+    sanitizePhone(phone) ||
+    sanitizePhone(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER) ||
+    "919876543210";
+  return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
 }
 
 /**

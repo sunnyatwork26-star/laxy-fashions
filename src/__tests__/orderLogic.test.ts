@@ -7,6 +7,8 @@ import {
   effectivePrice,
   slugify,
   buildWhatsAppMessage,
+  sanitizePhone,
+  whatsappUrl,
   ORDER_TRANSITIONS,
   STATUS_LABELS,
 } from "@/lib/orderLogic";
@@ -178,7 +180,7 @@ describe("slugify", () => {
   });
 });
 
-// ─── buildWhatsAppMessage ────────────────────────────────────────────────────
+// ─── buildWhatsAppMessage & whatsappUrl ──────────────────────────────────────
 
 describe("buildWhatsAppMessage", () => {
   it("builds a complete order message", () => {
@@ -197,6 +199,26 @@ describe("buildWhatsAppMessage", () => {
     expect(msg).toContain("1 × Cotton Saree");
     expect(msg).toContain("₹3,800");
     expect(msg).toContain("Hello Laxy Fashions");
+  });
+});
+
+describe("sanitizePhone & whatsappUrl", () => {
+  it("sanitizes 10-digit number to include 91 country code", () => {
+    expect(sanitizePhone("9876543210")).toBe("919876543210");
+  });
+
+  it("sanitizes number with spaces and symbols", () => {
+    expect(sanitizePhone("+91 98765-43210")).toBe("919876543210");
+  });
+
+  it("generates wa.me URL with custom dynamic phone", () => {
+    const url = whatsappUrl("Hello testing", "918888888888");
+    expect(url).toBe("https://wa.me/918888888888?text=Hello%20testing");
+  });
+
+  it("generates wa.me URL with 10-digit phone formatted with country code", () => {
+    const url = whatsappUrl("Inquiry", "9876543210");
+    expect(url).toBe("https://wa.me/919876543210?text=Inquiry");
   });
 });
 

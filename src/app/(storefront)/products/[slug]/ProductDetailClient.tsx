@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatINR, buildWhatsAppMessage, whatsappUrl } from "@/lib/orderLogic";
 import { useCart } from "@/context/CartContext";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { toast } from "sonner";
 
 interface ProductDetailProps {
@@ -38,6 +39,7 @@ interface ProductDetailProps {
 
 export default function ProductDetailClient({ product }: ProductDetailProps) {
   const { addItem, setDrawerOpen } = useCart();
+  const { getWhatsAppUrl } = useStoreSettings();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
@@ -84,14 +86,14 @@ export default function ProductDetailClient({ product }: ProductDetailProps) {
     setDrawerOpen(true);
   };
 
-  // WhatsApp quick inquire link
+  // WhatsApp quick inquire link using dynamic store settings
   const waDirectMessage = buildWhatsAppMessage({
     orderNumber: "INQUIRY",
     customerName: "Customer",
     items: [{ quantity, productNameSnapshot: product.name, unitPriceSnapshot: price }],
     total: price * quantity,
   });
-  const waLink = whatsappUrl(waDirectMessage);
+  const waLink = getWhatsAppUrl(waDirectMessage);
 
   return (
     <div className="container-laxy py-10 space-y-12">

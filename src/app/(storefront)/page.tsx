@@ -3,7 +3,8 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/storefront/ProductCard";
 import Reveal, { WordReveal } from "@/components/cinema/Reveal";
-import { serializeProducts } from "@/lib/orderLogic";
+import { serializeProducts, whatsappUrl } from "@/lib/orderLogic";
+import { getPublicStoreSettings } from "@/server/actions/settings";
 import {
   ShoppingBag,
   MessageCircle,
@@ -13,15 +14,16 @@ import {
   ShieldCheck,
   Award,
   Heart,
+  Truck,
+  RotateCcw,
+  Clock,
 } from "lucide-react";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
-
-  // Fetch active products and categories directly from DB
-  const [rawProducts, categories] = await Promise.all([
+  // Fetch active products, categories, and store settings directly from DB
+  const [rawProducts, categories, settings] = await Promise.all([
     prisma.product.findMany({
       where: { status: "ACTIVE" },
       orderBy: { createdAt: "desc" },
@@ -31,7 +33,11 @@ export default async function HomePage() {
       where: { status: "ACTIVE" },
       orderBy: { sortOrder: "asc" },
     }),
+    getPublicStoreSettings(),
   ]);
+
+  const waNumber = settings.whatsappNumber;
+  const storeName = settings.storeName;
 
   const featuredProducts = serializeProducts(rawProducts);
 
@@ -98,9 +104,10 @@ export default async function HomePage() {
                     </Link>
 
                     <a
-                      href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
-                        "Hello Laxy Fashions! I'd like to browse your saree collection."
-                      )}`}
+                      href={whatsappUrl(
+                        `Hello ${storeName}! I'd like to browse your saree collection.`,
+                        waNumber
+                      )}
                       target="_blank"
                       rel="noreferrer"
                       className="btn-outline-maroon text-sm px-6 py-3.5 hover:scale-[1.02] active:scale-[0.98]"
@@ -432,9 +439,10 @@ export default async function HomePage() {
                 </Link>
 
                 <a
-                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
-                    "Hello Laxy Fashions! I'd like to ask a question about your sarees."
-                  )}`}
+                  href={whatsappUrl(
+                    `Hello ${storeName}! I'd like to ask a question about your sarees.`,
+                    waNumber
+                  )}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-outline-maroon text-xs px-6 py-3 hover:scale-[1.02]"
