@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { Search, ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { Search, ChevronRight, Loader2, MessageCircle, X, ShoppingBag, Filter } from "lucide-react";
 import { transitionOrder } from "@/server/actions/orders";
 import { formatINR, STATUS_LABELS, STATUS_TONES, nextStatuses } from "@/lib/orderLogic";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { toast } from "sonner";
 
 const STATUS_TABS = [
-  { key: "", label: "All" },
+  { key: "", label: "All Orders" },
   { key: "PENDING", label: "Pending" },
   { key: "CONFIRMED", label: "Confirmed" },
   { key: "PREPARING", label: "Preparing" },
@@ -68,7 +68,7 @@ export default function AdminOrdersClient({ orders: initial }: { orders: Order[]
           list.map((x) => (x.id === o.id ? { ...x, status: res.status } : x))
         );
         toast.success(
-          `${o.orderNumber} → ${STATUS_LABELS[res.status]}`
+          `Order #${o.orderNumber} updated to ${STATUS_LABELS[res.status]}`
         );
       } else {
         toast.error(res.error);
@@ -77,132 +77,166 @@ export default function AdminOrdersClient({ orders: initial }: { orders: Order[]
     });
   };
 
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
-
   return (
-    <div className="p-5 sm:p-8 max-w-5xl">
-      <h1 className="font-heading text-3xl font-bold text-foreground">
-        Orders
-      </h1>
-      <p className="text-sm text-muted-foreground mt-1">
-        Manage customer orders and update their status.
-      </p>
+    <div className="p-5 sm:p-8 max-w-6xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-heading text-3xl sm:text-4xl font-bold text-foreground">
+            Order Management
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Track and process customer orders through fulfillment stages.
+          </p>
+        </div>
+      </div>
 
-      {/* Status tabs */}
-      <div className="mt-5 flex flex-wrap gap-1.5 border-b border-border pb-0">
-        {STATUS_TABS.map((tab) => {
-          const count = statusCounts[tab.key] || 0;
-          const isActive = statusFilter === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
-              className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors relative ${
-                isActive
-                  ? "bg-card text-primary border border-border border-b-transparent -mb-px"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              }`}
-            >
-              {tab.label}
-              {count > 0 && (
+      {/* Filter Tabs & Search Card */}
+      <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs space-y-4">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-border/50">
+          {STATUS_TABS.map((tab) => {
+            const count = statusCounts[tab.key] || 0;
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-xs shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                }`}
+              >
+                <span>{tab.label}</span>
                 <span
-                  className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
                     isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
                       : "bg-secondary text-muted-foreground"
                   }`}
                 >
                   {count}
                 </span>
-              )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search orders by #number, customer name, phone..."
+            className="w-full rounded-xl border border-border/70 bg-secondary/30 px-10 py-2.5 text-xs sm:text-sm outline-none focus:border-primary focus:bg-card transition-all"
+          />
+          {q && (
+            <button
+              onClick={() => setQ("")}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
             </button>
-          );
-        })}
+          )}
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by order number, name, or phone…"
-          className="flex-1 bg-transparent text-sm outline-none"
-        />
-      </div>
-
-      {/* Table */}
-      <div className="mt-4 rounded-xl border border-border bg-card overflow-hidden">
+      {/* Orders Table Container */}
+      <div className="rounded-2xl border border-border/80 bg-card shadow-xs overflow-hidden">
         {filtered.length === 0 ? (
-          <p className="p-8 text-sm text-muted-foreground text-center">
-            No orders found.
-          </p>
+          <div className="text-center py-16 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-secondary/80 flex items-center justify-center mx-auto mb-3 text-muted-foreground">
+              <ShoppingBag className="h-6 w-6" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">No orders matching your criteria</h3>
+            <p className="text-xs text-muted-foreground mt-1">Try selecting a different status filter or clearing search.</p>
+          </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border/60">
             {filtered.map((o) => {
               const next = nextStatuses(o.status);
+              const cleanPhone = o.phone.replace(/\D/g, "");
+              const waText = encodeURIComponent(
+                `Hi ${o.customerName}, regarding your order #${o.orderNumber} at Laxy Fashions...`
+              );
+
               return (
                 <div
                   key={o.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 hover:bg-secondary/30 transition-colors"
+                  className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-secondary/25 transition-colors"
                 >
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="min-w-0 flex-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">
-                        {o.orderNumber}
-                      </span>
-                      <StatusBadge status={o.status} />
+                  {/* Left: Customer & ID */}
+                  <Link href={`/admin/orders/${o.id}`} className="flex items-center gap-3.5 min-w-0 flex-1 group">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/80 border border-border/60 flex items-center justify-center font-mono text-xs font-bold text-foreground shrink-0 group-hover:border-primary/40 transition-colors">
+                      {o.customerName ? o.customerName.slice(0, 2).toUpperCase() : "LX"}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {o.customerName} · {o.phone} ·{" "}
-                      {new Date(o.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                          #{o.orderNumber}
+                        </span>
+                        <StatusBadge status={o.status} size="sm" />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        <span className="font-medium text-foreground/80">{o.customerName}</span> · {o.phone} ·{" "}
+                        {new Date(o.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
                   </Link>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="text-sm font-semibold text-foreground">
+
+                  {/* Right: Pricing, WhatsApp, Transition Controls */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-mono text-sm font-bold text-foreground min-w-[70px] text-right">
                       {formatINR(o.total)}
                     </span>
 
-                    {/* WhatsApp quick link */}
+                    {/* WhatsApp button */}
                     <a
-                      href={`https://wa.me/${o.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                        `Hi ${o.customerName}, regarding your order ${o.orderNumber} at Laxy Fashions...`
-                      )}`}
+                      href={`https://wa.me/${cleanPhone}?text=${waText}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1.5 rounded-full hover:bg-emerald-50 text-muted-foreground hover:text-emerald-600 transition-colors"
-                      title="Message on WhatsApp"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-colors"
+                      title="Direct WhatsApp Chat"
+                      aria-label="Direct WhatsApp Chat"
                     >
                       <MessageCircle className="h-4 w-4" />
                     </a>
 
+                    {/* Move to status dropdown */}
                     {next.length > 0 && (
-                      <select
-                        value=""
-                        onChange={(e) => transition(o, e.target.value)}
-                        disabled={busy[o.id]}
-                        className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
-                      >
-                        <option value="">Move to…</option>
-                        {next.map((s) => (
-                          <option key={s} value={s}>
-                            {STATUS_LABELS[s]}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value=""
+                          onChange={(e) => transition(o, e.target.value)}
+                          disabled={busy[o.id]}
+                          className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:border-primary disabled:opacity-50 cursor-pointer shadow-xs"
+                        >
+                          <option value="">Move to…</option>
+                          {next.map((s) => (
+                            <option key={s} value={s}>
+                              {STATUS_LABELS[s]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
+
                     {busy[o.id] && (
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     )}
-                    <Link href={`/admin/orders/${o.id}`}>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary/60 transition-colors"
+                      title="View order details"
+                    >
+                      <ChevronRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </div>
@@ -212,9 +246,10 @@ export default function AdminOrdersClient({ orders: initial }: { orders: Order[]
         )}
       </div>
 
-      {/* Summary */}
-      <div className="mt-3 text-xs text-muted-foreground">
-        Showing {filtered.length} of {orders.length} orders
+      {/* Footer count */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+        <span>Showing {filtered.length} of {orders.length} orders</span>
+        <span>Laxy Fashions Order Management</span>
       </div>
     </div>
   );

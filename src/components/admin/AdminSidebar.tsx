@@ -10,6 +10,8 @@ import {
   LogOut,
   Store,
   Boxes,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
 
 const NAV = [
@@ -30,19 +32,27 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     item.exact ? pathname === item.to : pathname.startsWith(item.to);
 
   return (
-    <aside className="lg:w-60 lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-card flex flex-col">
-      {/* Brand */}
-      <div className="px-5 py-5 flex items-center justify-between lg:justify-start gap-2">
-        <Link href="/admin" className="flex items-center gap-2">
-          <span className="font-heading text-xl text-accent">Laxy</span>
-          <span className="font-heading text-xl font-light text-foreground">
-            Admin
-          </span>
+    <aside className="lg:w-64 lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-border/80 bg-card flex flex-col transition-all">
+      {/* Brand Header */}
+      <div className="px-6 py-5 flex items-center justify-between border-b border-border/40">
+        <Link href="/admin" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-heading font-bold text-lg group-hover:scale-105 transition-transform">
+            L
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-heading text-xl font-bold text-foreground tracking-tight">Laxy</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/20">
+                PRO
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-medium -mt-0.5">Admin Console</p>
+          </div>
         </Link>
       </div>
 
-      {/* Nav */}
-      <nav className="flex lg:flex-col gap-1 px-3 pb-3 lg:pb-0 overflow-x-auto">
+      {/* Navigation */}
+      <nav className="p-3.5 space-y-1 flex lg:flex-col overflow-x-auto">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = isActive(item);
@@ -50,59 +60,73 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <Link
               key={item.to}
               href={item.to}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-all ${
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground/75 hover:bg-secondary"
+                  ? "bg-primary text-primary-foreground shadow-xs shadow-primary/20 font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={`h-4 w-4 ${active ? "text-primary-foreground" : "text-muted-foreground"}`} />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="hidden lg:block mt-auto p-3 space-y-1">
+      {/* Quick Links & User Footer */}
+      <div className="hidden lg:flex flex-col mt-auto p-4 border-t border-border/40 space-y-2">
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/75 hover:bg-secondary"
+          target="_blank"
+          className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
         >
-          <Store className="h-4 w-4" />
-          View store
+          <span className="flex items-center gap-2">
+            <Store className="h-3.5 w-3.5" />
+            Live Storefront
+          </span>
+          <ExternalLink className="h-3 w-3 opacity-60" />
         </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
-          className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/75 hover:bg-secondary"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign out
-        </button>
-        {user?.email && (
-          <p className="px-3 pt-2 text-xs text-muted-foreground truncate">
-            {user.email}
-            {user.role && (
-              <span className="ml-1 capitalize text-[10px] opacity-60">
-                · {user.role.toLowerCase()}
-              </span>
-            )}
-          </p>
-        )}
+
+        {/* User Card */}
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-3 mt-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-semibold">
+                {user?.name ? user.name[0].toUpperCase() : "A"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">{user?.name || "Admin"}</p>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <ShieldCheck className="h-2.5 w-2.5 text-emerald-600" />
+                  <span className="capitalize">{user?.role?.toLowerCase() || "Owner"}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: "/admin/login" })}
+              title="Sign out"
+              aria-label="Sign out"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Mobile bottom bar */}
-      <div className="lg:hidden flex justify-end gap-2 px-4 py-2 border-t border-border">
+      {/* Mobile Bottom Quick Actions */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-2.5 border-t border-border/60 bg-card/80 backdrop-blur-md">
         <Link
           href="/"
-          className="text-xs text-muted-foreground flex items-center gap-1"
+          target="_blank"
+          className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 hover:text-foreground"
         >
           <Store className="h-3.5 w-3.5" />
-          Store
+          Storefront
         </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/admin/login" })}
-          className="text-xs text-muted-foreground flex items-center gap-1"
+          className="text-xs font-medium text-destructive/80 flex items-center gap-1.5 hover:text-destructive"
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign out
