@@ -232,3 +232,23 @@ model OrderCounter {
   id        Int @id @default(1)
   nextValue Int @default(1001)
 }
+
+// ─────────────────────────────────────────────
+// STORE SETTING — dynamic admin configuration
+// ─────────────────────────────────────────────
+
+model StoreSetting {
+  id                    String   @id @default("default")
+  storeName             String   @default("Laxy Fashions")
+  storeTagline          String   @default("Handcrafted Luxury Sarees")
+  supportEmail          String   @default("admin@laxyfashions.com")
+  supportPhone          String   @default("919876543210")
+  whatsappNumber        String   @default("919876543210")
+  announcementText      String   @default("Complimentary Express Shipping Across India")
+  announcementEnabled   Boolean  @default(true)
+  freeShippingThreshold Decimal  @default(0) @db.Decimal(10, 2)
+  orderPrefix           String   @default("LF")
+  lowStockThreshold     Int      @default(3)
+  codEnabled            Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+}

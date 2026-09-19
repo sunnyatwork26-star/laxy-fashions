@@ -12,6 +12,7 @@ import {
   Boxes,
   ShieldCheck,
   ExternalLink,
+  Settings,
 } from "lucide-react";
 
 const NAV = [
@@ -19,6 +20,7 @@ const NAV = [
   { to: "/admin/orders", label: "Orders", icon: ClipboardList, exact: false },
   { to: "/admin/products", label: "Products", icon: Package, exact: false },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes, exact: false },
+  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ];
 
 interface AdminSidebarProps {
