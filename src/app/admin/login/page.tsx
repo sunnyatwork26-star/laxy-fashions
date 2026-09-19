@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, LogIn, Mail, Lock } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Loader2, LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Suspense } from "react";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") ?? "/admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,27 +19,78 @@ function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const res = await signIn("credentials", {
+      // 1. Fetch CSRF token
+      const csrfRes = await fetch("/api/auth/csrf");
+      const csrfData = await csrfRes.json();
+      const csrfToken = csrfData?.csrfToken;
+
+      // 2. Perform direct POST to credentials callback with X-Auth-Return-Redirect
+      const body = new URLSearchParams({
+        csrfToken: csrfToken || "",
         email: email.trim().toLowerCase(),
         password,
-        redirect: false,
+        callbackUrl: callbackUrl || "/admin",
+        json: "true",
       });
 
-      if (res?.error) {
-        setError(
-          res.error === "CredentialsSignin"
-            ? "Invalid email or password."
-            : "Login failed. Please verify credentials or try again later."
-        );
-      } else {
-        // Direct window navigation ensures session cookies are applied immediately
-        window.location.href = callbackUrl;
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Auth-Return-Redirect": "1",
+        },
+        body: body.toString(),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || (data?.url && data.url.includes("error="))) {
+        let errorMsg = "Invalid email or password.";
+        if (data?.url) {
+          try {
+            const parsedUrl = new URL(data.url, window.location.origin);
+            const errParam = parsedUrl.searchParams.get("error");
+            if (errParam && errParam !== "CredentialsSignin") {
+              errorMsg = "Login failed. Please check credentials or try again later.";
+            }
+          } catch {
+            // fallback to default
+          }
+        }
+        setError(errorMsg);
+        setLoading(false);
+        return;
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+
+      // Success — redirect immediately to admin dashboard
+      const target = data?.url || callbackUrl || "/admin";
+      window.location.href = target;
+    } catch (err) {
+      console.error("Direct login error, trying fallback:", err);
+      try {
+        const fallbackRes = await signIn("credentials", {
+          email: email.trim().toLowerCase(),
+          password,
+          redirect: false,
+          callbackUrl,
+        });
+
+        if (fallbackRes?.error) {
+          setError(
+            fallbackRes.error === "CredentialsSignin"
+              ? "Invalid email or password."
+              : "Login failed. Please verify credentials or try again later."
+          );
+        } else if (fallbackRes?.url || fallbackRes?.ok) {
+          window.location.href = fallbackRes.url || callbackUrl || "/admin";
+        }
+      } catch {
+        setError("Something went wrong. Please check your connection and try again.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -78,7 +129,7 @@ function LoginForm() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
                   id="email"
                   type="email"
@@ -101,24 +152,38 @@ function LoginForm() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={inputCls}
+                  className={`${inputCls} pr-10`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-sm font-medium text-primary-foreground btn-press disabled:opacity-60 mt-2"
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-sm font-medium text-primary-foreground btn-press disabled:opacity-60 mt-2 cursor-pointer disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
